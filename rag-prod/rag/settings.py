@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-eh&fxemj$f=8%pic%%hwiti8oph1yeeik%-lo&r*+p)k&2)qex
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "*").split(",") if h.strip()] if os.getenv("ALLOWED_HOSTS") else ['127.0.0.1', 'localhost', 'testserver', '0.0.0.0', '*']
 
 
 # Application definition
@@ -122,6 +122,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'uploads'
 
 
 # Email

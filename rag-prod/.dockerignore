@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Environments and credentials
+.env
+*.env
+.env.*
+venv/
+.venv/
+env/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases & uploads
+*.sqlite3
+staticfiles/
+uploads/*
+!uploads/.gitkeep
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

@@ -12,4 +12,5 @@ fastembed
 pypdf
 PyPDF2
 python-dotenv
- langchain_google_genai
+langchain_google_genai
+gunicorn

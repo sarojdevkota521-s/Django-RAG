@@ -66,7 +66,7 @@ def get_google_model(model="gemini-3.5-flash"):
 # llm = ChatGroq(temperature=0.1, groq_api_key=groq_api_key, model_name="llama-3.1-8b-instant") if groq_api_key else None
 
 
-# Alias for compatibilityF
+# Alias for compatibility
 get_openai_model = get_google_model
 
 google_api_key = (os.getenv("GOOGLE_API_KEY") or getattr(settings, "GOOGLE_API_KEY", "") or "").strip().strip('"').strip("'")

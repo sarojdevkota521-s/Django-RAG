@@ -180,6 +180,7 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 staticfile/
+uploads/
 
 # Cython debug symbols
 cython_debug/

@@ -1,0 +1,30 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: django_rag_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+      - PORT=8000
+    env_file:
+      - rag-prod/.env
+    volumes:
+      - rag_uploads:/app/uploads
+      - rag_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  rag_uploads:
+    name: django_rag_uploads
+  rag_data:
+    name: django_rag_data
