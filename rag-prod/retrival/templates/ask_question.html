@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}Ask AI - Django RAG Q&amp;A Assistant{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+            <h1 style="font-size: 2rem; margin-bottom: 0.25rem;">
+                Document <span class="gradient-text">Q&amp;A Assistant</span>
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">
+                RetrievalQA powered by LangChain, FastEmbed, and Qdrant.
+            </p>
+        </div>
+
+        <div>
+            {% if has_collection %}
+                <span class="nav-status">
+                    <span class="status-dot"></span>
+                    <span>Vector Collection Active{% if uploaded_pdf.name %} ({{ uploaded_pdf.name }}){% endif %}</span>
+                </span>
+            {% else %}
+                <span style="display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.85rem; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; font-size: 0.8rem; border-radius: 9999px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></span>
+                    <span>No Active Document</span>
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not has_collection %}
+        <div class="alert alert-warning">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+                <strong>Document not indexed yet:</strong> Please upload a PDF first to generate embeddings in Qdrant.
+                <a href="{% url 'upload_pdf' %}" style="color: #fcd34d; text-decoration: underline; margin-left: 0.5rem; font-weight: 600;">Go to Upload &rarr;</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if error %}
+        <div class="alert alert-error">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+                <strong>Error:</strong> {{ error }}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Input Card -->
+    <div class="glass-card">
+        <form method="POST" id="qa-form">
+            {% csrf_token %}
+            <label for="question-input" style="font-weight: 600; font-size: 0.95rem; color: #e2e8f0; display: block; margin-bottom: 0.5rem;">
+                Ask a question about your uploaded document:
+            </label>
+
+            <div class="chat-input-wrapper">
+                <input 
+                    type="text" 
+                    name="question" 
+                    id="question-input" 
+                    class="text-input" 
+                    placeholder="e.g. What are the key points in section 3? Or summarize the document..." 
+                    value="{{ question }}" 
+                    required 
+                    autocomplete="off"
+                >
+                <button type="submit" class="btn btn-primary" id="ask-btn">
+                    <div class="spinner" id="ask-spinner"></div>
+                    <span id="ask-btn-text">Search &amp; Answer</span>
+                </button>
+            </div>
+
+            <!-- Quick Prompt Suggestions -->
+            <div class="quick-prompts">
+                <span style="font-size: 0.8rem; color: var(--text-dim); margin-right: 0.25rem; align-self: center;">Try:</span>
+                <span class="prompt-chip" onclick="setPrompt('Summarize the main points of this document.')">Summarize document</span>
+                <span class="prompt-chip" onclick="setPrompt('What are the key obligations and responsibilities?')">Key obligations</span>
+                <span class="prompt-chip" onclick="setPrompt('Are there any important dates, deadlines, or timelines?')">Important dates</span>
+                <span class="prompt-chip" onclick="setPrompt('What are the main risks or exceptions mentioned?')">Risks &amp; exceptions</span>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Thread -->
+    <div class="qa-thread" id="thread-area">
+        {% if answer %}
+            <!-- User Question Bubble -->
+            <div class="message-bubble">
+                <div class="message-avatar avatar-user">You</div>
+                <div class="message-body">
+                    <div class="message-sender">User Question</div>
+                    <div class="message-content" style="font-weight: 500;">{{ question }}</div>
+                </div>
+            </div>
+
+            <!-- AI Response Bubble -->
+            <div class="message-bubble">
+                <div class="message-avatar avatar-ai">AI</div>
+                <div class="message-body">
+                    <div class="message-sender" style="display: flex; justify-content: space-between;">
+                        <span>LangChain &bull; Google Gemini</span>
+                        <span style="color: #38bdf8; font-weight: 600;">FastEmbed + Qdrant</span>
+                    </div>
+                    <div class="message-content">{{ answer|linebreaks }}</div>
+
+                    {% if source_docs %}
+                        <div class="source-accordion">
+                            <div class="source-header" onclick="toggleSources()">
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                                <span>Retrieved Context ({{ source_docs|length }} chunk{{ source_docs|length|pluralize }} from Qdrant vector store)</span>
+                            </div>
+                            <div id="sources-container" style="display: block; margin-top: 0.5rem;">
+                                {% for doc in source_docs %}
+                                    <div class="source-chunk">
+                                        <div style="font-size: 0.75rem; color: #818cf8; margin-bottom: 0.35rem; font-weight: 600;">Chunk #{{ forloop.counter }}</div>
+                                        {{ doc.page_content }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% if recent_queries %}
+            <div style="margin-top: 2rem;">
+                <h3 style="font-size: 1.15rem; font-weight: 600; color: #f8fafc; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: #818cf8;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Saved Query History ({{ recent_queries|length }})
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    {% for q in recent_queries %}
+                        <div class="glass-card" style="padding: 1rem 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.4rem;">
+                                <strong style="color: #a5b4fc; font-size: 0.95rem;">Q: {{ q.user_query }}</strong>
+                                <span style="font-size: 0.75rem; color: var(--text-dim); white-space: nowrap;">{{ q.created_at|date:"M d, H:i" }}</span>
+                            </div>
+                            <p style="color: #cbd5e1; font-size: 0.9rem; margin: 0; line-height: 1.5;">
+                                {{ q.response|truncatewords:60 }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function setPrompt(text) {
+        const input = document.getElementById('question-input');
+        input.value = text;
+        input.focus();
+    }
+
+    function toggleSources() {
+        const container = document.getElementById('sources-container');
+        if (container) {
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    const qaForm = document.getElementById('qa-form');
+    const askBtn = document.getElementById('ask-btn');
+    const askBtnText = document.getElementById('ask-btn-text');
+    const askSpinner = document.getElementById('ask-spinner');
+    const questionInput = document.getElementById('question-input');
+    const threadArea = document.getElementById('thread-area');
+
+    qaForm.addEventListener('submit', (e) => {
+        askBtn.disabled = true;
+        askBtn.style.opacity = '0.7';
+        askSpinner.style.display = 'inline-block';
+        askBtnText.textContent = 'Retrieving Context...';
+    });
+</script>
+{% endblock %}

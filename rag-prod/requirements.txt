@@ -1,5 +1,15 @@
-Django>=5.0
-python-dotenv
-PyPDF2
+django
 langchain
-langchain-groq
+langchain_classic
+langchain_community
+langchain_core
+langchain_text_splitters
+langchain_qdrant
+qdrant-client
+tiktoken
+langchain_groq
+fastembed
+pypdf
+PyPDF2
+python-dotenv
+ langchain_google_genai

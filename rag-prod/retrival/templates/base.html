@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Django RAG - AI Document Intelligence{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{% url 'home' %}" class="brand">
+                <div class="brand-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <div class="brand-text">Django<span class="gradient-text">RAG</span></div>
+                <span class="brand-badge">FastEmbed + Qdrant</span>
+            </a>
+
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
+                    <li><a href="{% url 'upload_pdf' %}" class="nav-link {% if request.resolver_match.url_name == 'upload_pdf' %}active{% endif %}">Upload Document</a></li>
+                    <li><a href="{% url 'ask_question' %}" class="nav-link {% if request.resolver_match.url_name == 'ask_question' %}active{% endif %}">Ask AI</a></li>
+                    <li>
+                        <div class="nav-status">
+                            <span class="status-dot"></span>
+                            <span>Qdrant Connected</span>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div>Django-RAG Engine &copy; 2026 &bull; Production Retrieval Augmented Generation Architecture</div>
+        <div class="footer-badges">
+            <span class="tech-badge">LangChain</span>
+            <span class="tech-badge">FastEmbed</span>
+            <span class="tech-badge">Qdrant Cloud</span>
+            <span class="tech-badge">Google Gemini</span>
+            <span class="tech-badge">Django 6</span>
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
