@@ -26,6 +26,7 @@ def health_check(request):
 
 urlpatterns = [
     path('health/', health_check, name='health_check'),
+    path('health', health_check, name='health_check_no_slash'),
     path('admin/', admin.site.urls),
     path('retrival/', include('retrival.urls')),
     path('', RedirectView.as_view(url='/retrival/', permanent=False)),

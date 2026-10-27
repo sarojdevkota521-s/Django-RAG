@@ -30,12 +30,43 @@ SECRET_KEY = os.getenv("SECRET_KEY", 'django-insecure-eh&fxemj$f=8%pic%%hwiti8op
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "*").split(",") if h.strip()] if os.getenv("ALLOWED_HOSTS") else ['127.0.0.1', 'localhost', 'testserver', '0.0.0.0', '*']
+# ALLOWED_HOSTS configuration
+raw_allowed_hosts = os.getenv("ALLOWED_HOSTS", "*")
+if not raw_allowed_hosts or raw_allowed_hosts.strip() in ("*", "'*'", '"*"', ""):
+    ALLOWED_HOSTS = ["*"]
+else:
+    hosts = []
+    for h in raw_allowed_hosts.split(","):
+        cleaned = h.strip().strip("'").strip('"')
+        if cleaned.startswith("http://"):
+            cleaned = cleaned[7:]
+        elif cleaned.startswith("https://"):
+            cleaned = cleaned[8:]
+        cleaned = cleaned.split("/")[0].split(":")[0]
+        if cleaned:
+            hosts.append(cleaned)
+    # Always include localhost, loopback, and cloud health check interfaces
+    hosts.extend([
+        "127.0.0.1",
+        "localhost",
+        "0.0.0.0",
+        "testserver",
+        ".onrender.com",
+    ])
+    # Render's internal health check agents use private IP addresses (e.g. 10.x.x.x)
+    # If running on Render or '*' is specified, allow all hosts
+    if os.getenv("RENDER") or "*" in hosts:
+        ALLOWED_HOSTS = ["*"]
+    else:
+        ALLOWED_HOSTS = list(set(hosts))
 
-# Allow reverse proxy and HTTPS origins on AWS / custom domains
-CSRF_TRUSTED_ORIGINS = [
+# Allow reverse proxy and HTTPS origins on Render / AWS / custom domains
+csrf_origins = [
     origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()
 ]
+if os.getenv("RENDER"):
+    csrf_origins.append("https://*.onrender.com")
+CSRF_TRUSTED_ORIGINS = list(set(csrf_origins))
 
 
 # Application definition
