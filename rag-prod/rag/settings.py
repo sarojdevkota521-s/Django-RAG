@@ -79,6 +79,8 @@ TEMPLATES = [
     },
 ]
 
+
+
 WSGI_APPLICATION = 'rag.wsgi.application'
 
 
