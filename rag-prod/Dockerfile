@@ -30,6 +30,8 @@ FROM python:3.12-slim AS runner
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH=/home/appuser/.local/bin:$PATH \
+    PYTHONPATH=/home/appuser/.local/lib/python3.12/site-packages:$PYTHONPATH \
+    DATA_DIR=/app/data \
     PORT=8000
 
 # Install runtime system libraries:
@@ -58,10 +60,13 @@ RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 USER appuser
 
+# Pre-cache FastEmbed embedding model weights to eliminate AWS cold-start latency
+RUN python -c "from langchain_community.embeddings.fastembed import FastEmbedEmbeddings; FastEmbedEmbeddings()" || true
+
 EXPOSE 8000
 
-# Container healthcheck
+# Container healthcheck using dedicated /health/ endpoint
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:8000/health/ || exit 1
 
 ENTRYPOINT ["/app/entrypoint.sh"]

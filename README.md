@@ -37,6 +37,9 @@ Production-ready Retrieval-Augmented Generation (RAG) web application powered by
 - **Multi-Stage Build**: Keeps the final production image slim by isolating build-time compilers and caching wheel installations.
 - **FastEmbed & ONNX Runtime Support**: Includes `libgomp1` (OpenMP) required for high-performance ONNX vector embeddings under Linux.
 - **Security**: Runs under a dedicated unprivileged user (`appuser`).
-- **Healthcheck**: Built-in container health monitoring via `curl`.
 - **Automatic Migration & Asset Collection**: Database migrations and static collection are executed seamlessly on container startup via `entrypoint.sh`.
 - **Production WSGI Server**: Powered by `gunicorn` with configurable workers and timeouts.
+- **Static Assets with WhiteNoise**: Automatically serves static files in production without requiring a standalone Nginx proxy.
+
+---
+

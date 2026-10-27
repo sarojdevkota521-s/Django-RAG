@@ -8,8 +8,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=True
-      - ALLOWED_HOSTS=*
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - DATA_DIR=/app/data
       - PORT=8000
     env_file:
       - rag-prod/.env
@@ -17,7 +18,7 @@ services:
       - rag_uploads:/app/uploads
       - rag_data:/app/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s
       timeout: 5s
       retries: 3

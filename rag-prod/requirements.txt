@@ -14,3 +14,4 @@ PyPDF2
 python-dotenv
 langchain_google_genai
 gunicorn
+whitenoise
